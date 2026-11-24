@@ -1,0 +1,11 @@
+{
+  "schema": 1,
+  "input": "example.csv",
+  "target": "label",
+  "exclude": [],
+  "jobs": [
+    {"id": "audit", "operation": "audit"},
+    {"id": "compare", "operation": "compare", "options": {"top_k": 2}},
+    {"id": "validation", "operation": "validate", "options": {"top_k": 2, "folds": 5}}
+  ]
+}
