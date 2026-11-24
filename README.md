@@ -6,6 +6,24 @@
 
 [**下载 TerraFactor 5.0.1 · Windows 64 位便携 ZIP**](https://github.com/Duixiansheng/feature-screening-toolkit/releases/download/v5.0.1/terrafactor-v5.0.1-windows-x64.zip) · [历史版本](https://github.com/Duixiansheng/feature-screening-toolkit/tags)
 
+## 主要功能
+
+### 检查样本数据
+
+查看两类样本的数量，定位缺失值、无效数值、重复行和常量列。用 Spearman 相关系数找出信息可能重叠的因子对。
+
+### 对照因子分析结果
+
+在同一张样本表上运行多种方法，查看每个因子得到哪些方法支持，以及各方法的候选结果有多少重合。
+
+### 在留出样本上比较表现
+
+按类别分层，或按流域、地块等字段分组。每折在训练样本上重新计算排名，再用同一批留出样本比较全因子与排名靠前的 K 个因子。查看逐折 AP、ROC AUC 和候选因子出现次数。
+
+### 重复运行并导出结果
+
+把数据与参数保存成项目，一次运行多项分析。重跑时可复用已完成且数据与参数一致的结果。桌面版支持查看图表、排序，以及导出 CSV 或 JSON。
+
 ## 开始使用
 
 1. 解压整个 `TerraFactor` 文件夹，双击 `TerraFactor.exe`，打开包内的 `example.csv`。
@@ -17,16 +35,6 @@
 ### 滑坡合成案例
 
 打开 `examples/terrafactor-landslide-project.json`，点击「运行当前页」并选择输出目录。完成后可以切到「数据体检」「方法对照」和「留出验证」查看结果。直接打开同目录的 CSV 时，软件会默认排除 `sample_id`，用 `basin_id` 分组。若要手动复现项目的验证结果，验证方法选 IGR，Top K 填 3，折数填 4。
-
-## 五代更新
-
-| 版本 | 新能力 | 可单独运行的入口 |
-| --- | --- | --- |
-| [1.0](https://github.com/Duixiansheng/feature-screening-toolkit/tree/v1.0.0) | 数据体检。检查缺失、无效数值、常量列、重复样本和类别失衡，报告 Spearman 高相关因子对。 | `data_audit.py` |
-| [2.0](https://github.com/Duixiansheng/feature-screening-toolkit/tree/v2.0.0) | 方法对照。汇集七种方法的结果，输出候选支持次数、两两交集与 Jaccard 一致度。 | `method_comparison.py` |
-| [3.0](https://github.com/Duixiansheng/feature-screening-toolkit/tree/v3.0.0) | 留出验证。支持分层及按组分折，在每折训练侧重新估计因子排名和标准化参数，报告 AP、ROC AUC、稳定性与逐样本留出预测。 | `fold_validation.py` |
-| [4.0](https://github.com/Duixiansheng/feature-screening-toolkit/tree/v4.0.0) | 批量项目。使用 JSON 描述任务，按数据、参数和软件版本指纹复用结果，失败任务可重新执行。 | `factor_project.py` |
-| [5.0](https://github.com/Duixiansheng/feature-screening-toolkit/tree/v5.0.0) | Windows 工作台。四个结果页面、图表、排序、项目保存和载入、后台运行与 JSON/CSV 导出。 | `studio.py` |
 
 ## 数据和结果怎么读
 
