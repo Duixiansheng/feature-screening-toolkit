@@ -1,0 +1,65 @@
+name: Windows desktop release
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing release tag
+        required: true
+        default: v0.1.0
+
+permissions:
+  contents: write
+
+jobs:
+  package:
+    runs-on: windows-latest
+    env:
+      RELEASE_TAG: ${{ inputs.tag }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          architecture: x64
+      - name: Build portable desktop app
+        shell: pwsh
+        run: |
+          python -m pip install -r requirements.txt pyinstaller==6.22.3
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python -m PyInstaller --onedir --windowed --noupx --name FeatureScreening desktop.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $app = 'dist/FeatureScreening'
+          Copy-Item example.csv $app
+          @'
+          地学因子筛选工具
+
+          解压整个 FeatureScreening 文件夹，双击 FeatureScreening.exe。
+          打开 example.csv，选择 label 作为目标列，选择 IGR。
+          指定新的 JSON 输出路径，点击「运行并导出」。
+          '@ | Set-Content "$app/QUICKSTART.txt" -Encoding utf8
+          $notices = New-Item "$app/ThirdPartyNotices" -ItemType Directory
+          $pythonHome = python -c "import sys; print(sys.base_prefix)"
+          Copy-Item "$pythonHome/LICENSE.txt" $notices.FullName
+          $tcl = Get-ChildItem "$pythonHome/tcl" -Filter license.terms -Recurse
+          foreach ($notice in $tcl) {
+            Copy-Item $notice.FullName (Join-Path $notices.FullName ($notice.Directory.Name + '-license.terms'))
+          }
+          $sitePackages = python -c "import sysconfig; print(sysconfig.get_path('purelib'))"
+          Get-ChildItem $sitePackages -Directory | Where-Object {
+            $_.Name -match '^(cloudpickle|joblib|numpy|scikit_learn|scipy|threadpoolctl)-.*\.dist-info$'
+          } | ForEach-Object {
+            $destination = New-Item (Join-Path $notices.FullName $_.Name) -ItemType Directory
+            Get-ChildItem $_.FullName | Where-Object {
+              $_.Name -match 'license|notice|copying'
+            } | Copy-Item -Destination $destination.FullName -Recurse
+          }
+          $zip = "feature-screening-toolkit-$env:RELEASE_TAG-windows-x64.zip"
+          Compress-Archive -Path $app -DestinationPath $zip
+          python -m zipfile -t $zip
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          gh release upload $env:RELEASE_TAG $zip
+          exit $LASTEXITCODE
