@@ -1,22 +1,26 @@
-# TerraFactor · 地学因子分析
+# TerraFactor
 
-TerraFactor 用于量化地学样本中数值因子与二元标签的关系。导入包含坡度、降水量、植被指数等因子和 `0/1` 标签的 CSV，选择分析方法，即可将因子得分、排名或方法判定结果导出为 JSON。
+**地学样本的因子分析软件**
 
-[**下载 Windows 64 位便携版（v0.1.0 ZIP）**](https://github.com/Duixiansheng/feature-screening-toolkit/releases/download/v0.1.0/feature-screening-toolkit-v0.1.0-windows-x64.zip)
+分析坡度、降水量、植被指数等数值因子与两类样本之间的关系。输入带有 `0/1` 标签的 CSV，即可按所选方法计算因子得分、排名或判定状态，并将结果导出为 JSON。
 
-解压整个 `FeatureScreening` 文件夹，双击 `FeatureScreening.exe`。无需另装 Python。
+[**下载 TerraFactor v0.1.0**](https://github.com/Duixiansheng/feature-screening-toolkit/releases/download/v0.1.0/feature-screening-toolkit-v0.1.0-windows-x64.zip) · Windows 64 位 · 便携 ZIP
 
-## 快速体验
+## 主要功能
 
-1. 打开包内的合成示例 `example.csv`。
-2. 目标列选 `label`，方法选 `IGR`。
-3. 指定新的 JSON 文件路径，点击「运行并导出」，查看三个示例因子的得分和排名。
+- **比较因子表现**：用 IGR 等方法对因子打分和排序。例如，查看坡度与降水量在区分两类样本时各自得到多少分。
+- **查看方法结果**：用 Boruta 查看因子的确认、待定和剔除状态，或用 RF-RFE 查看每一轮剔除了哪个因子。
+- **导出分析记录**：将当前方法的参数结果和因子对应关系保存为 JSON。
 
-## 数据格式
+## 开始使用
 
-使用 UTF-8 CSV。第一行为列名，每行对应一个样本。目标列使用数字 `0` 和 `1`，两类均需有样本。参与分析的因子列应为有限数值。样本编号、坐标等辅助列可在窗口中勾选排除。
+1. 解压整个 `FeatureScreening` 文件夹，双击 `FeatureScreening.exe`。无需另装 Python。
+2. 打开包内的合成数据 `example.csv`，选择目标列 `label` 和方法 `IGR`。
+3. 选择一个新的 JSON 文件路径，点击「运行并导出」。打开结果即可查看三个示例因子的得分和排名。
 
-## 分析方法
+使用自己的数据时，请提供 UTF-8 CSV，第一行为列名，每行对应一个样本。目标列只取数字 `0` 和 `1`，两类都要有样本。参与分析的因子列须为有限数值。编号和坐标等辅助列可在窗口中勾选排除。
+
+## 方法参考
 
 | 方法 | 输出内容 |
 | --- | --- |
