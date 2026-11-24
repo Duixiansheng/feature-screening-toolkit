@@ -52,6 +52,27 @@ def encode_numpy(value):
     raise TypeError(f"Cannot serialize {type(value).__name__}")
 
 
+def run_selection(input_path, target, excluded, method, output, seed=42, jobs=1):
+    if not 0 <= seed <= 2**32 - 101 or jobs == 0:
+        raise ValueError("Use a seed between 0 and 4294967195 and a nonzero worker count")
+    if output.exists():
+        raise ValueError(f"Output already exists: {output}")
+    x, y, names = load_csv(input_path, target, excluded)
+    if method == "mRMR" and len(x) < 11:
+        raise ValueError("mRMR requires at least 11 training rows")
+    result = fit_method(method, x, y, seed, Settings(jobs=jobs))
+    report = {
+        "method": method,
+        "seed": seed,
+        "training_rows": len(x),
+        "features": names,
+        "result": result,
+    }
+    payload = json.dumps(report, default=encode_numpy, ensure_ascii=False, allow_nan=False, indent=2)
+    with output.open("x", encoding="utf-8") as stream:
+        stream.write(payload + "\n")
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("input", type=Path, help="UTF-8 training CSV")
@@ -63,24 +84,8 @@ def main():
     parser.add_argument("--jobs", type=int, default=1, help="Random forest worker count")
     args = parser.parse_args()
     try:
-        if not 0 <= args.seed <= 2**32 - 101 or args.jobs == 0:
-            raise ValueError("Use a seed between 0 and 4294967195 and a nonzero worker count")
-        if args.output.exists():
-            raise ValueError(f"Output already exists: {args.output}")
-        x, y, names = load_csv(args.input, args.target, args.exclude)
-        if args.method == "mRMR" and len(x) < 11:
-            raise ValueError("mRMR requires at least 11 training rows")
-        result = fit_method(args.method, x, y, args.seed, Settings(jobs=args.jobs))
-        report = {
-            "method": args.method,
-            "seed": args.seed,
-            "training_rows": len(x),
-            "features": names,
-            "result": result,
-        }
-        payload = json.dumps(report, default=encode_numpy, ensure_ascii=False, allow_nan=False, indent=2)
-        with args.output.open("x", encoding="utf-8") as stream:
-            stream.write(payload + "\n")
+        run_selection(args.input, args.target, args.exclude, args.method,
+                      args.output, args.seed, args.jobs)
     except (OSError, ValueError, RuntimeError) as exc:
         parser.exit(1, f"Error: {exc}\n")
 
