@@ -1,0 +1,70 @@
+name: Publish TerraFactor 5
+
+on:
+  push:
+    paths:
+      - '.github/workflows/terrafactor-5.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: windows-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          architecture: x64
+      - name: Verify, package, and publish the Windows release
+        shell: pwsh
+        run: |
+          python -m pip install -r requirements.txt pyinstaller==6.22.3
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python factor_project.py example-project.json --output workflow-verification
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python -m PyInstaller --onedir --windowed --noupx --name TerraFactor studio.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $app = 'dist/TerraFactor'
+          Copy-Item example.csv,example-project.json,README.md $app
+          $notices = New-Item "$app/ThirdPartyNotices" -ItemType Directory
+          $pythonHome = python -c "import sys; print(sys.base_prefix)"
+          Copy-Item "$pythonHome/LICENSE.txt" $notices.FullName
+          Get-ChildItem "$pythonHome/tcl" -Filter license.terms -Recurse | ForEach-Object {
+            Copy-Item $_.FullName (Join-Path $notices.FullName ($_.Directory.Name + '-license.terms'))
+          }
+          $sitePackages = python -c "import sysconfig; print(sysconfig.get_path('purelib'))"
+          Get-ChildItem $sitePackages -Directory -Filter '*.dist-info' | ForEach-Object {
+            $licenseFiles = Get-ChildItem $_.FullName | Where-Object Name -match 'license|notice|copying'
+            if ($licenseFiles) {
+              $destination = New-Item (Join-Path $notices.FullName $_.Name) -ItemType Directory
+              $licenseFiles | Copy-Item -Destination $destination.FullName -Recurse
+            }
+          }
+          $zip = 'terrafactor-v5.0.0-windows-x64.zip'
+          Compress-Archive -Path $app -DestinationPath $zip
+          python -m zipfile -t $zip
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          foreach ($generation in 1..4) {
+            $tag = "v$generation.0.0"
+            $record = git log --format='%H' -1 --grep="^TerraFactor generation ${generation}:"
+            if (!$record) { throw "Missing generation $generation commit" }
+            $existing = git tag --list $tag
+            if ($existing) {
+              if ((git rev-list -n 1 $tag) -ne $record) { throw "$tag already points to another commit" }
+            } else {
+              git tag $tag $record
+              git push origin "refs/tags/$tag"
+              if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+            }
+          }
+          gh release create v5.0.0 $zip --target $env:GITHUB_SHA --title 'TerraFactor 5' --notes 'Five generations of TerraFactor, with a Windows workspace for data audits, method comparisons, cross-validation, and reproducible projects.'
+          exit $LASTEXITCODE
