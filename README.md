@@ -2,7 +2,17 @@
 
 一个面向地学二分类任务的 Python 命令行工具。它从带有 0/1 标签的样本表中筛选数值型因子，例如坡度、地形起伏度、降水量和植被指数。工具提供七种筛选方法，可将因子排名、入选集合和方法诊断信息导出为 JSON。
 
-## 安装和运行
+## Windows 桌面版
+
+[下载 Windows 64 位便携版 ZIP](https://github.com/Duixiansheng/feature-screening-toolkit/releases/download/v0.1.0/feature-screening-toolkit-v0.1.0-windows-x64.zip)
+
+解压整个 `FeatureScreening` 文件夹，双击 `FeatureScreening.exe` 打开。无需另装 Python。
+
+1. 打开训练 CSV。首次使用可选择压缩包中的 `example.csv`。
+2. 选择目标列和筛选方法，按需排除编号、坐标等列。示例的目标列是 `label`。
+3. 选择新的 JSON 输出路径，点击「运行并导出」。
+
+## Python 命令行版
 
 需要 Python 3.11 至 3.13。进入本目录后运行：
 
