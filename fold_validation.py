@@ -26,11 +26,18 @@ def validation_input(path, target, excluded, group):
         raise ValueError("至少保留一个数值因子。")
     gi, ti = header.index(group), header.index(target)
     columns = [header.index(name) for name in names]
+    groups = np.asarray([row[gi].strip() for row in rows])
+    if any(groups == ""):
+        raise ValueError(f"分组列「{group}」有空值，请补齐或清空分组列设置。")
     x = np.asarray([[number(row[i]) for i in columns] for row in rows])
     y = np.asarray([number(row[ti]) for row in rows])
-    groups = np.asarray([row[gi].strip() for row in rows])
-    if not np.isfinite(x).all() or set(y) != {0, 1} or any(groups == ""):
-        raise ValueError("因子须为有限数值，目标须有 0 和 1，分组值不能为空。")
+    valid = np.isfinite(x)
+    if not valid.all():
+        row, col = divmod(int(valid.argmin()), len(names))
+        raise ValueError(f"样本 {row + 1} 的「{names[col]}」不是有效数值。"
+                         "若是样本编号，请在「排除列」中勾选。")
+    if set(y) != {0, 1}:
+        raise ValueError(f"目标列「{target}」须为数字 0 或 1，且两类都要有样本。")
     return x, y.astype(int), names, groups
 
 
@@ -52,7 +59,8 @@ def evaluate(path, target, excluded=(), method="IGR", top_k=2, folds=5, group=No
     if not 2 <= folds <= int(np.bincount(y).min()):
         raise ValueError("折数至少为 2，且不能超过最少类别的样本数。")
     if groups is not None and len(set(groups)) < folds:
-        raise ValueError("独立组数量少于折数。")
+        raise ValueError(f"分组列「{group}」只有 {len(set(groups))} 个不同组，无法分成 {folds} 折。"
+                         "请选择流域等分组字段，或清空分组列。")
     if groups is None:
         splitter = StratifiedKFold(folds, shuffle=True, random_state=seed)
     else:

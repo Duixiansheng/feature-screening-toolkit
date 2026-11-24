@@ -31,12 +31,25 @@ def load_csv(path, target, excluded):
             if len(row) != len(header):
                 raise ValueError(f"Row {line}: expected {len(header)} columns")
             try:
-                features = [float(row[i]) for i in indexes]
                 label = float(row[label_index])
-            except ValueError as exc:
-                raise ValueError(f"Row {line}: features and target must be numeric") from exc
-            if label not in (0, 1) or not np.isfinite(features).all():
-                raise ValueError(f"Row {line}: features must be finite and target must be 0 or 1")
+            except ValueError:
+                label = None
+            if label not in (0, 1):
+                raise ValueError(f"CSV 第 {line} 行的目标列「{target}」须为 0 或 1。")
+            try:
+                features = [float(row[i]) for i in indexes]
+            except ValueError:
+                features = []
+                for i in indexes:
+                    try:
+                        features.append(float(row[i]))
+                    except ValueError:
+                        features.append(np.nan)
+            valid = np.isfinite(features)
+            if not valid.all():
+                i = indexes[int(np.flatnonzero(~valid)[0])]
+                raise ValueError(f"CSV 第 {line} 行的「{header[i]}」不是有效数值。"
+                                 "若是编号或类别列，请设为分组列或在「排除列」中勾选。")
             rows.append(features)
             labels.append(int(label))
     if set(labels) != {0, 1}:

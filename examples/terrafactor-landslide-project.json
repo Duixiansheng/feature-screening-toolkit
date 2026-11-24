@@ -1,0 +1,39 @@
+{
+  "schema": 1,
+  "input": "terrafactor-landslide-demo.csv",
+  "target": "label",
+  "exclude": [
+    "sample_id",
+    "basin_id"
+  ],
+  "jobs": [
+    {
+      "id": "audit",
+      "operation": "audit"
+    },
+    {
+      "id": "compare",
+      "operation": "compare",
+      "options": {
+        "methods": [
+          "IGR",
+          "mRMR",
+          "ReliefF"
+        ],
+        "top_k": 3,
+        "seed": 42
+      }
+    },
+    {
+      "id": "validation",
+      "operation": "validate",
+      "options": {
+        "method": "IGR",
+        "top_k": 3,
+        "folds": 4,
+        "group": "basin_id",
+        "seed": 42
+      }
+    }
+  ]
+}

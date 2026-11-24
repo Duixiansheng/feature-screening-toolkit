@@ -16,7 +16,7 @@ from fold_validation import evaluate
 from method_comparison import compare_methods
 from select_factors import encode_numpy
 
-ENGINE_REVISION = "5.0.0"
+ENGINE_REVISION = "5.0.1"
 OPERATIONS = {"audit": audit, "compare": compare_methods, "validate": evaluate}
 ENGINE = dict(terrafactor=ENGINE_REVISION, numpy=numpy.__version__,
               scipy=scipy.__version__, scikit_learn=sklearn.__version__)

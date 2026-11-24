@@ -4,7 +4,7 @@
 
 打开带有 `0/1` 标签的 CSV，检查数据质量、对照多种因子分析方法，并在留出的样本上比较全因子与 Top K 的表现。重复分析可以保存成项目，批量执行并按输入指纹复用结果。
 
-[**下载 TerraFactor 5 · Windows 64 位便携 ZIP**](https://github.com/Duixiansheng/feature-screening-toolkit/releases/download/v5.0.0/terrafactor-v5.0.0-windows-x64.zip) · [历史版本](https://github.com/Duixiansheng/feature-screening-toolkit/tags)
+[**下载 TerraFactor 5.0.1 · Windows 64 位便携 ZIP**](https://github.com/Duixiansheng/feature-screening-toolkit/releases/download/v5.0.1/terrafactor-v5.0.1-windows-x64.zip) · [历史版本](https://github.com/Duixiansheng/feature-screening-toolkit/tags)
 
 ## 开始使用
 
@@ -13,6 +13,10 @@
 3. 转到「方法对照」或「留出验证」运行相应分析，点击表头可排序。
 4. 用「保存项目」保存参数。也可以直接打开包内的 `example-project.json`，把三项分析一次跑完。
 5. 把当前页结果导出为 CSV 或 JSON。JSON 保留更完整的方法配置、交集、逐折预测和运行记录。
+
+### 滑坡合成案例
+
+打开 `examples/terrafactor-landslide-project.json`，点击「运行当前页」并选择输出目录。完成后可以切到「数据体检」「方法对照」和「留出验证」查看结果。直接打开同目录的 CSV 时，软件会默认排除 `sample_id`，用 `basin_id` 分组。若要手动复现项目的验证结果，验证方法选 IGR，Top K 填 3，折数填 4。
 
 ## 五代更新
 

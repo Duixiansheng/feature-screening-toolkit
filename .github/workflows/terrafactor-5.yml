@@ -12,6 +12,8 @@ permissions:
 jobs:
   publish:
     runs-on: windows-latest
+    concurrency:
+      group: terrafactor-5-1-release
     env:
       GH_TOKEN: ${{ github.token }}
       OPENBLAS_NUM_THREADS: '1'
@@ -31,10 +33,13 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python factor_project.py example-project.json --output workflow-verification
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python factor_project.py examples/terrafactor-landslide-project.json --output case-verification
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python -m PyInstaller --onedir --windowed --noupx --name TerraFactor studio.py
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           $app = 'dist/TerraFactor'
           Copy-Item example.csv,example-project.json,README.md $app
+          Copy-Item examples $app -Recurse
           $notices = New-Item "$app/ThirdPartyNotices" -ItemType Directory
           $pythonHome = python -c "import sys; print(sys.base_prefix)"
           Copy-Item "$pythonHome/LICENSE.txt" $notices.FullName
@@ -49,22 +54,9 @@ jobs:
               $licenseFiles | Copy-Item -Destination $destination.FullName -Recurse
             }
           }
-          $zip = 'terrafactor-v5.0.0-windows-x64.zip'
+          $zip = 'terrafactor-v5.0.1-windows-x64.zip'
           Compress-Archive -Path $app -DestinationPath $zip
           python -m zipfile -t $zip
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          foreach ($generation in 1..4) {
-            $tag = "v$generation.0.0"
-            $record = git log --format='%H' -1 --grep="^TerraFactor generation ${generation}:"
-            if (!$record) { throw "Missing generation $generation commit" }
-            $existing = git tag --list $tag
-            if ($existing) {
-              if ((git rev-list -n 1 $tag) -ne $record) { throw "$tag already points to another commit" }
-            } else {
-              git tag $tag $record
-              git push origin "refs/tags/$tag"
-              if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-            }
-          }
-          gh release create v5.0.0 $zip --target $env:GITHUB_SHA --title 'TerraFactor 5' --notes 'Five generations of TerraFactor, with a Windows workspace for data audits, method comparisons, cross-validation, and reproducible projects.'
+          gh release create v5.0.1 $zip --target $env:GITHUB_SHA --title 'TerraFactor 5.0.1' --notes 'Fixes the sample workflow with default ID and basin roles, clearer validation errors, and direct previews of completed batch results.'
           exit $LASTEXITCODE

@@ -1,5 +1,6 @@
 """TerraFactor 5 desktop workspace."""
 import csv
+import json
 import os
 from pathlib import Path
 from queue import Empty, SimpleQueue
@@ -196,7 +197,7 @@ class TerraFactorStudio:
             return
         self.source = path
         self.columns = names
-        self.set_exclusion([])
+        self.set_exclusion([name for name in names if name.casefold() == "sample_id"])
         for key in TABS[:3]:
             self.results.pop(key, None)
             self.views[key].replace([])
@@ -206,9 +207,11 @@ class TerraFactorStudio:
         self.filename.set(str(path))
         self.target.configure(values=names)
         self.target.set("label" if "label" in names else names[-1])
+        group = next((name for name in names if name.casefold() == "basin_id"), "")
         self.group.configure(values=["", *names])
-        self.group.set("")
-        self.status.set(f"已读取 {len(names)} 个列名。")
+        self.group.set(group)
+        hints = ([f"分组 {group}"] if group else []) + ([f"排除 {'、'.join(sorted(self.excluded))}"] if self.excluded else [])
+        self.status.set(" · ".join([f"已读取 {len(names)} 个列名", *hints]))
 
     def choose_project(self):
         name = filedialog.askopenfilename(parent=self.root, filetypes=[("JSON", "*.json")])
@@ -338,6 +341,7 @@ class TerraFactorStudio:
                         method, folds = self.validation_method.get(), int(self.folds.get())
                         action = lambda: evaluate(source, target, excluded, method, top_k, folds, group, seed)
         except ValueError as exc:
+            self.views[key].summary.set(str(exc))
             self.status.set(str(exc))
             return
         self.cancel.clear()
@@ -349,12 +353,25 @@ class TerraFactorStudio:
                                   state="normal" if key == "project" else "disabled")
         self.progress.start(14)
         self.status.set(f"正在运行 {TABLES[key][1]}…")
+        self.views[key].summary.set("正在运行…")
         def worker():
             try:
-                self.events.put(("done", (key, action(), "")))
+                result = action()
+                previews = self.project_previews(result, destination) if key == "project" else {}
+                self.events.put(("done", (key, result, previews, "")))
             except Exception as exc:
-                self.events.put(("done", (key, None, str(exc))))
+                self.events.put(("done", (key, None, {}, str(exc))))
         Thread(target=worker, daemon=True).start()
+
+    @staticmethod
+    def project_previews(report, destination):
+        previews = {}
+        for operation in TABS[:3]:
+            jobs = [job for job in report["jobs"] if job["operation"] == operation and "file" in job]
+            if len(jobs) == 1:
+                with (Path(destination) / jobs[0]["file"]).open(encoding="utf-8") as stream:
+                    previews[operation] = json.load(stream)["result"]
+        return previews
 
     def poll(self):
         try:
@@ -363,7 +380,7 @@ class TerraFactorStudio:
                 if event == "status":
                     self.status.set(data)
                     continue
-                key, report, error = data
+                key, report, previews, error = data
                 self.running = False
                 self.open_csv.configure(state="normal")
                 self.open_project.configure(state="normal")
@@ -374,11 +391,27 @@ class TerraFactorStudio:
                     self.root.destroy()
                     return
                 if error:
-                    self.status.set(error)
+                    self.results.pop(key, None)
+                    view = self.views[key]
+                    view.replace([])
+                    if view.chart:
+                        view.chart.delete("all")
+                    view.summary.set(f"运行失败。{error}")
+                    self.status.set(f"{TABLES[key][1]}运行失败，原因见本页。")
                 else:
                     self.results[key] = report
                     self.render(key)
-                    self.status.set(f"{TABLES[key][1]}已完成，可导出结果。")
+                    if key == "project":
+                        for operation, preview in previews.items():
+                            self.results[operation] = preview
+                            self.render(operation)
+                            view = self.views[operation]
+                            source_name = Path(report["input"]).name
+                            view.summary.set(f"项目数据 {source_name} · {view.summary.get()}")
+                        failures = sum(job["state"] == "failed" for job in report["jobs"])
+                        self.status.set(f"批量项目处理结束，{failures} 项失败。详情见项目表。")
+                    else:
+                        self.status.set(f"{TABLES[key][1]}已完成，可导出结果。")
         except Empty:
             pass
         self.root.after(75, self.poll)
