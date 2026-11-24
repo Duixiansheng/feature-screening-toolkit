@@ -4,7 +4,7 @@
 
 打开带有 `0/1` 标签的 CSV，检查数据质量、对照多种因子分析方法，并在留出的样本上比较全因子与 Top K 的表现。重复分析可以保存成项目，批量执行并按输入指纹复用结果。
 
-[Windows 64 位便携版与历史版本](https://github.com/Duixiansheng/feature-screening-toolkit/releases)
+[**下载 TerraFactor 5 · Windows 64 位便携 ZIP**](https://github.com/Duixiansheng/feature-screening-toolkit/releases/download/v5.0.0/terrafactor-v5.0.0-windows-x64.zip) · [历史版本](https://github.com/Duixiansheng/feature-screening-toolkit/tags)
 
 ## 开始使用
 
@@ -18,11 +18,11 @@
 
 | 版本 | 新能力 | 可单独运行的入口 |
 | --- | --- | --- |
-| 1.0 | 数据体检。检查缺失、无效数值、常量列、重复样本和类别失衡，报告 Spearman 高相关因子对。 | `data_audit.py` |
-| 2.0 | 方法对照。汇集七种方法的结果，输出候选支持次数、两两交集与 Jaccard 一致度。 | `method_comparison.py` |
-| 3.0 | 留出验证。支持分层及按组分折，在每折训练侧重新估计因子排名和标准化参数，报告 AP、ROC AUC、稳定性与逐样本留出预测。 | `fold_validation.py` |
-| 4.0 | 批量项目。使用 JSON 描述任务，按数据、参数和软件版本指纹复用结果，失败任务可重新执行。 | `factor_project.py` |
-| 5.0 | Windows 工作台。四个结果页面、图表、排序、项目保存和载入、后台运行与 JSON/CSV 导出。 | `studio.py` |
+| [1.0](https://github.com/Duixiansheng/feature-screening-toolkit/tree/v1.0.0) | 数据体检。检查缺失、无效数值、常量列、重复样本和类别失衡，报告 Spearman 高相关因子对。 | `data_audit.py` |
+| [2.0](https://github.com/Duixiansheng/feature-screening-toolkit/tree/v2.0.0) | 方法对照。汇集七种方法的结果，输出候选支持次数、两两交集与 Jaccard 一致度。 | `method_comparison.py` |
+| [3.0](https://github.com/Duixiansheng/feature-screening-toolkit/tree/v3.0.0) | 留出验证。支持分层及按组分折，在每折训练侧重新估计因子排名和标准化参数，报告 AP、ROC AUC、稳定性与逐样本留出预测。 | `fold_validation.py` |
+| [4.0](https://github.com/Duixiansheng/feature-screening-toolkit/tree/v4.0.0) | 批量项目。使用 JSON 描述任务，按数据、参数和软件版本指纹复用结果，失败任务可重新执行。 | `factor_project.py` |
+| [5.0](https://github.com/Duixiansheng/feature-screening-toolkit/tree/v5.0.0) | Windows 工作台。四个结果页面、图表、排序、项目保存和载入、后台运行与 JSON/CSV 导出。 | `studio.py` |
 
 ## 数据和结果怎么读
 
